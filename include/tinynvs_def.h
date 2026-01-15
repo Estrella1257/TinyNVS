@@ -6,6 +6,7 @@
 
 #define NVS_MAGIC           0x31564B54
 #define NVS_SECTOR_SIZE     4096
+#define NVS_BUCKET_SIZE     16
 
 typedef enum {
     SECTOR_STATE_EMPTY = 0xFFFFFFFF,
@@ -40,5 +41,11 @@ typedef struct {
 //一个Entry的实际大小: 头部 + key长度 + data长度 + 对齐
 #define NVS_ENTRY_SIZE(k_ken, d_len) \
     (sizeof(nvs_entry_header_t) + ALIGN_UP((k_len) + (d_len), 4))
+
+typedef struct nvs_index_node {
+    uint32_t key_hash;
+    uint32_t offset;
+    struct nvs_index_node *next;
+} nvs_index_node_t;
 
 #endif
