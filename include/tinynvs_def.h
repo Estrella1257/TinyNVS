@@ -19,7 +19,7 @@ typedef struct {
     uint32_t magic;                         //固定标识
     uint32_t erase_count;                   //擦除计数（用于磨损平衡）
     uint32_t state;
-    uint32_t reserved;                      //保留 / 版本号 / CRC校验
+    //uint32_t reserved;                      //保留 / 版本号 / CRC校验
     uint32_t seq_id;
 } nvs_sector_header_t;
 
@@ -57,6 +57,7 @@ typedef struct {
     uint32_t active_sector_addr;
     uint32_t write_offset;
     uint32_t current_seq_id;
+    uint32_t sector_erase_counts[NVS_SECTOR_COUNT];
 } nvs_manager_t;
 
 extern nvs_manager_t g_nvs;

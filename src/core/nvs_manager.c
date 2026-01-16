@@ -4,6 +4,10 @@
 
 nvs_manager_t g_nvs = {0};
 
+static int get_sector_idx(uint32_t addr) {
+    return (addr - NVS_BASE_ADDR) / NVS_SECTOR_SIZE;
+}
+
 int nvs_init(void) {
     nvs_sector_header_t header;
 
@@ -18,6 +22,13 @@ int nvs_init(void) {
         uint32_t sector_addr = NVS_BASE_ADDR + (i * NVS_SECTOR_SIZE);
 
         hal_flash_read(sector_addr, &header, sizeof(header));
+
+        if (header.magic == NVS_MAGIC) {
+            g_nvs.sector_erase_counts[i] = header.erase_count;
+        }
+        else {
+            g_nvs.sector_erase_counts[i] = 0;
+        }
 
         // 检查 Magic Number 是否合法
         if (header.magic != NVS_MAGIC) continue;         
@@ -67,8 +78,32 @@ int nvs_init(void) {
         g_nvs.write_offset = sizeof(nvs_sector_header_t);
         g_nvs.current_seq_id = 1;
 
+        g_nvs.sector_erase_counts[0] = 1;
+
         nvs_index_clear();
     }
-    
     return 0;
+}
+
+uint32_t nvs_get_best_free_sector(void) {
+    uint32_t best_addr = 0xFFFFFFFF;
+    uint32_t min_erase_count = 0xFFFFFFFF;
+    int current_active_idx = get_sector_idx(g_nvs.active_sector_addr);
+
+    for (int i = 0; i < NVS_SECTOR_COUNT; i++) {
+        if (i == current_active_idx) continue;
+
+        if (g_nvs.sector_erase_counts[i] < min_erase_count) {
+            min_erase_count = g_nvs.sector_erase_counts[i];
+            best_addr = NVS_BASE_ADDR + (i * NVS_SECTOR_SIZE);
+        }
+    }
+
+    if (best_addr == 0xFFFFFFFF) {
+        printf("[NVS] Error: No free sector available!\n");
+        return 0;
+    }
+    printf("[WL] Selected Sector %d (EraseCount: %d) as GC Target\n", get_sector_idx(best_addr), min_erase_count);
+
+    return best_addr;
 }
