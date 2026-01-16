@@ -2,6 +2,7 @@
 #define TINYNVS_DEF_H
 
 #include <stdio.h>
+#include <stdint.h>
 #include "hal_flash.h"
 
 #define NVS_MAGIC           0x31564B54
@@ -10,19 +11,20 @@
 // 静态磨损均衡阈值
 // 当 (最大擦除次数 - 最小擦除次数) > 此值时，触发强制搬运
 #define NVS_STATIC_WL_THRESHOLD   10
+#define NVS_MAX_KEYS        64
+#define NVS_KEY_MAX_LEN     128
+#define NVS_DATA_MAX_LEN     256
 
 typedef enum {
     SECTOR_STATE_EMPTY = 0xFFFFFFFF,
-    SECTOR_STATE_USED = 0xFFFF0000,
-    SECTOR_STATE_FULL = 0x00FF0000,
-    SECTOR_STATE_GARBAGE = 0x00000000        //扇区数据已废弃，等待回收
+    SECTOR_STATE_COPYING = 0xFFFF0000,
+    SECTOR_STATE_USED = 0x00000000        
 } nvs_sector_state_t;
 
 typedef struct {
     uint32_t magic;                         //固定标识
     uint32_t erase_count;                   //擦除计数（用于磨损平衡）
     uint32_t state;
-    //uint32_t reserved;                      //保留 / 版本号 / CRC校验
     uint32_t seq_id;
 } nvs_sector_header_t;
 
@@ -43,13 +45,14 @@ typedef struct {
 #define ALIGN_UP(size, align) (((size) + (align) - 1) & ~((align) - 1))
 
 //一个Entry的实际大小: 头部 + key长度 + data长度 + 对齐
-#define NVS_ENTRY_SIZE(k_ken, d_len) \
+#define NVS_ENTRY_SIZE(k_len, d_len) \
     (sizeof(nvs_entry_header_t) + ALIGN_UP((k_len) + (d_len), 4))
 
 typedef struct nvs_index_node {
     uint32_t key_hash;
     uint32_t offset;
     struct nvs_index_node *next;
+    uint8_t used;
 } nvs_index_node_t;
 
 // --- 扇区管理器配置 ---
@@ -61,6 +64,7 @@ typedef struct {
     uint32_t write_offset;
     uint32_t current_seq_id;
     uint32_t sector_erase_counts[NVS_SECTOR_COUNT];
+    nvs_index_node_t node_pool[NVS_MAX_KEYS];
 } nvs_manager_t;
 
 extern nvs_manager_t g_nvs;

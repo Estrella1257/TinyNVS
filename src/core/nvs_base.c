@@ -9,7 +9,6 @@ int nvs_format_sector(uint32_t sector_addr, uint32_t old_erase_count, uint32_t s
     header.magic = NVS_MAGIC;
     header.erase_count = old_erase_count + 1;
     header.state = SECTOR_STATE_EMPTY;
-    //header.reserved = 0xFFFFFFFF;
     header.seq_id = seq_id;
 
     return hal_flash_write(sector_addr, &header, sizeof(header));
