@@ -91,7 +91,9 @@ uint32_t nvs_mount(uint32_t sector_addr) {
 }
 
 uint32_t nvs_gc_collect(uint32_t src_sector, uint32_t dst_sector) {
-    nvs_format_sector(dst_sector, 1);
+    uint32_t new_seq = g_nvs.current_seq_id + 1;
+    
+    nvs_format_sector(dst_sector, 1, new_seq);
 
     uint32_t current_offset = sizeof(nvs_sector_header_t);
 
@@ -124,6 +126,9 @@ uint32_t nvs_gc_collect(uint32_t src_sector, uint32_t dst_sector) {
             node = node->next;
         }
     }
+
+    g_nvs.current_seq_id = new_seq;
+
     hal_flash_erase(src_sector);
 
     return current_offset;

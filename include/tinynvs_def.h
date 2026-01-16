@@ -20,6 +20,7 @@ typedef struct {
     uint32_t erase_count;                   //擦除计数（用于磨损平衡）
     uint32_t state;
     uint32_t reserved;                      //保留 / 版本号 / CRC校验
+    uint32_t seq_id;
 } nvs_sector_header_t;
 
 typedef enum {
@@ -47,5 +48,19 @@ typedef struct nvs_index_node {
     uint32_t offset;
     struct nvs_index_node *next;
 } nvs_index_node_t;
+
+// --- 扇区管理器配置 ---
+#define NVS_BASE_ADDR       0x00000000  // Flash 起始地址
+#define NVS_SECTOR_COUNT    4           // 我们管理 4 个扇区 (0x0000, 0x1000, 0x2000, 0x3000)
+
+typedef struct {
+    uint32_t active_sector_addr;
+    uint32_t write_offset;
+    uint32_t current_seq_id;
+} nvs_manager_t;
+
+extern nvs_manager_t g_nvs;
+
+
 
 #endif
