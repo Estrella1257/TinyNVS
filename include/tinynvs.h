@@ -17,6 +17,7 @@ void nvs_index_remove(const char *key);
 int nvs_delete(uint32_t sector_addr, const char *key);
 
 int nvs_init(void);
-uint32_t nvs_get_best_free_sector(void);
+uint32_t nvs_get_best_free_sector(uint32_t exclude_addr);
+int nvs_check_and_execute_static_wl(void);
 
 #endif

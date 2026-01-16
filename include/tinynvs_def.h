@@ -7,6 +7,9 @@
 #define NVS_MAGIC           0x31564B54
 #define NVS_SECTOR_SIZE     4096
 #define NVS_BUCKET_SIZE     16
+// 静态磨损均衡阈值
+// 当 (最大擦除次数 - 最小擦除次数) > 此值时，触发强制搬运
+#define NVS_STATIC_WL_THRESHOLD   10
 
 typedef enum {
     SECTOR_STATE_EMPTY = 0xFFFFFFFF,
