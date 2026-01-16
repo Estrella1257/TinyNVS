@@ -13,6 +13,7 @@ void nvs_index_update(const char *key, uint32_t offset);
 uint32_t nvs_mount(uint32_t sector_addr);
 void nvs_index_clear(void);
 uint32_t nvs_gc_collect(uint32_t src_sector, uint32_t dst_sector);
-
+void nvs_index_remove(const char *key);
+int nvs_delete(uint32_t sector_addr, const char *key);
 
 #endif

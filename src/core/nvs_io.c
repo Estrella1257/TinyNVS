@@ -68,3 +68,25 @@ int nvs_read_value(uint32_t sector_addr, const char *key, void *out_buf, size_t 
     }
     return header.data_len;
 }
+
+int nvs_delete(uint32_t sector_addr, const char *key) {
+    uint32_t offset = nvs_index_find(key);
+
+    if (offset == 0) {
+        return -1;         //根本不存在,没法删
+    }
+
+    uint32_t state_offset_in_header = offsetof(nvs_entry_header_t, state);
+    uint32_t flash_write_addr = sector_addr + offset + state_offset_in_header;
+
+    nvs_entry_state_t del_state = ENTRY_STATE_DELETED;
+
+    int ret = hal_flash_write(flash_write_addr, &del_state, sizeof(del_state));
+    if (ret != 0) {
+        return -2;         //硬件写入失败
+    }
+
+    nvs_index_remove(key);
+
+    return 0;
+}

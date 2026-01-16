@@ -128,3 +128,27 @@ uint32_t nvs_gc_collect(uint32_t src_sector, uint32_t dst_sector) {
 
     return current_offset;
 }
+
+void nvs_index_remove(const char *key) {
+    uint32_t hash = crc32_compute(key, strlen(key));
+    uint8_t idx = hash % NVS_BUCKET_SIZE;
+
+    nvs_index_node_t *current = buckets[idx];
+    nvs_index_node_t *prev = NULL;
+
+    while (current) {
+        if (current->key_hash == hash) {
+            if (prev == NULL) {
+                buckets[idx] = current->next;
+            }
+            else {
+                prev->next = current->next;
+            }
+
+            free(current);
+            return;
+        }
+        prev = current;
+        current = current->next;
+    }
+}
