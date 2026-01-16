@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "tinynvs_def.h"
+#include "tinynvs.h"
 #include "crc32.h"
 #include "hal_flash.h"
 
@@ -88,4 +88,43 @@ uint32_t nvs_mount(uint32_t sector_addr) {
         offset = next_offset;
     }
     return offset;
+}
+
+uint32_t nvs_gc_collect(uint32_t src_sector, uint32_t dst_sector) {
+    nvs_format_sector(dst_sector, 1);
+
+    uint32_t current_offset = sizeof(nvs_sector_header_t);
+
+    char key_buf[128];
+    char data_buf[256];
+    nvs_entry_header_t header;
+
+    for (int i = 0; i < NVS_BUCKET_SIZE; i++) {
+        nvs_index_node_t *node = buckets[i];
+
+        while (node) {
+            uint32_t src_addr = src_sector + node->offset;
+
+            hal_flash_read(src_addr, &header, sizeof(header));
+            
+            //读key
+            hal_flash_read(src_addr + sizeof(header), key_buf, header.key_len);
+            key_buf[header.key_len] = '\0';
+            
+            //读data
+            hal_flash_read(src_addr + sizeof(header) + header.key_len, data_buf, header.data_len);
+
+            int new_offset = nvs_append_entry(dst_sector, current_offset, key_buf, data_buf, header.data_len);
+
+            //更新 RAM 索引指向新地址
+            node->offset = current_offset;
+
+            //推进偏移量
+            current_offset = new_offset;
+            node = node->next;
+        }
+    }
+    hal_flash_erase(src_sector);
+
+    return current_offset;
 }

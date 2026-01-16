@@ -1,9 +1,7 @@
 #include <string.h>
 #include "hal_flash.h"
-#include "tinynvs_def.h"
+#include "tinynvs.h"
 #include "crc32.h"
-
-uint32_t nvs_index_find(const char *key);
 
 int nvs_append_entry(uint32_t sector_addr, uint32_t current_offset, const char *key, const void* data, uint16_t len) {
     uint8_t key_len = strlen(key);
